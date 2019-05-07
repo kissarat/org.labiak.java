@@ -5,8 +5,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -19,17 +20,13 @@ public class HomeController {
 
     @GetMapping(path = "/about")
     public ObjectNode main() {
-        WebClient client = WebClient.create("https://api.ipify.org?format=json");
-        WebClient.RequestHeadersUriSpec<?> r = client.get();
-        IpResponse ipr = r.exchange()
-                .block()
-                .bodyToMono(IpResponse.class)
-                .block();
+        RestTemplate client = new RestTemplate();
+        ResponseEntity<IpResponse> r = client.getForEntity("https://api.ipify.org?format=json", IpResponse.class);
         LocalDateTime d = LocalDateTime.now();
         ObjectNode object = mapper.createObjectNode();
         object.put("ok", true);
         object.put("time", DateTimeFormatter.ISO_DATE_TIME.format(d));
-        object.put("ip", ipr.ip);
+        object.put("ip", r.getBody().ip);
         return object;
     }
 
