@@ -2,6 +2,7 @@ package org.labiak.java.config;
 
 import org.labiak.java.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,6 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 
@@ -20,6 +22,9 @@ import org.springframework.security.crypto.password.StandardPasswordEncoder;
 public class AppConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private UserService userService;
+
+    @Value("${password.strength}")
+    private int strength;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -56,7 +61,7 @@ public class AppConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public PasswordEncoder encoder() {
-        return new StandardPasswordEncoder("cWqUwVzV7GtABZtEyigTTdTW5FPwRr38");
+        return new BCryptPasswordEncoder(strength);
     }
 
 //    @Autowired
