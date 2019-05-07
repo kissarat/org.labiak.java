@@ -1,6 +1,5 @@
 package org.labiak.java.config;
 
-import org.labiak.java.filters.ServletFilter;
 import org.labiak.java.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -12,9 +11,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.crypto.password.StandardPasswordEncoder;
+
 
 @EnableWebSecurity
 @Configuration
@@ -24,13 +23,17 @@ public class AppConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
-                .antMatchers(HttpMethod.GET, "/about")
+        http.csrf().disable()
+                .authorizeRequests()
+                .antMatchers(HttpMethod.POST,"/user")
                 .permitAll()
-                .anyRequest().authenticated()
                 .and()
-                .headers().frameOptions().disable();
-        http.addFilterAfter(new ServletFilter(), BasicAuthenticationFilter.class);
+                .authorizeRequests()
+                .anyRequest()
+                .authenticated()
+                .and()
+                .httpBasic();
+//        http.addFilterAfter(new ServletFilter(), BasicAuthenticationFilter.class);
     }
 
     @Override
@@ -53,6 +56,14 @@ public class AppConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public PasswordEncoder encoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new StandardPasswordEncoder("cWqUwVzV7GtABZtEyigTTdTW5FPwRr38");
     }
+
+//    @Autowired
+//    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+//        auth.inMemoryAuthentication()
+//                .withUser("taras")
+//                .password("taras")
+//                .roles("USER");
+//    }
 }
