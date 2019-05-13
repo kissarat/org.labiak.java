@@ -10,9 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.lang.annotation.Annotation;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
 
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -39,6 +44,45 @@ public class HomeController {
         object.put("hasParent", context.getParent() != null);
         object.put("startup", DateTimeFormatter.ISO_DATE_TIME.format(startup));
         return object;
+    }
+
+    @GetMapping(path = "/beans")
+    public ArrayList<ClassDescription> beans() {
+        String[] names = context.getBeanDefinitionNames();
+        ArrayList<ClassDescription> list = new ArrayList<>(names.length);
+        for(String name : names) {
+            ClassDescription description = new ClassDescription();
+            description.setName(name);
+            try {
+                Class c = Class.forName(name);
+                Annotation[] annotations = c.getAnnotations();
+                ArrayList<AnnotationDescription> annotationDescriptions = new ArrayList<>(annotations.length);
+                for(Annotation annotation : annotations) {
+                    AnnotationDescription annotationDescription = new AnnotationDescription();
+                            annotationDescription.setName(annotation.annotationType().getName());
+                            annotationDescription.setDescription(annotation.toString());
+                    annotationDescriptions.add(annotationDescription);
+                }
+                description.setAnnotations(annotationDescriptions);
+            }
+            catch (ClassNotFoundException ex) {
+
+            }
+            list.add(description);
+        }
+        return list;
+    }
+
+    @Data
+    static class AnnotationDescription {
+        private String name;
+        private String description;
+    }
+
+    @Data
+    static class ClassDescription {
+        private String name;
+        private ArrayList<AnnotationDescription> annotations;
     }
 
     @Data
