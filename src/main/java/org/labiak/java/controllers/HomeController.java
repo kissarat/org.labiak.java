@@ -46,28 +46,32 @@ public class HomeController {
         return object;
     }
 
+    private static ArrayList<AnnotationDescription> annotationDescriptionsFor(Class c) {
+        Annotation[] annotations = c.getAnnotations();
+        ArrayList<AnnotationDescription> annotationDescriptions = new ArrayList<>(annotations.length);
+        for (Annotation annotation : annotations) {
+            AnnotationDescription annotationDescription = new AnnotationDescription();
+            annotationDescription.setName(annotation.annotationType().getName());
+            annotationDescription.setDescription(annotation.toString());
+            annotationDescriptions.add(annotationDescription);
+        }
+        return annotationDescriptions;
+    }
+
     @GetMapping(path = "/beans")
-    public ArrayList<ClassDescription> beans() {
+    public ArrayList<ClassDescription> beans() throws ClassNotFoundException {
         String[] names = context.getBeanDefinitionNames();
         ArrayList<ClassDescription> list = new ArrayList<>(names.length);
-        for(String name : names) {
+        for (String name : names) {
+            Class bean = context.getBean(name).getClass();
             ClassDescription description = new ClassDescription();
             description.setName(name);
-            try {
-                Class c = Class.forName(name);
-                Annotation[] annotations = c.getAnnotations();
-                ArrayList<AnnotationDescription> annotationDescriptions = new ArrayList<>(annotations.length);
-                for(Annotation annotation : annotations) {
-                    AnnotationDescription annotationDescription = new AnnotationDescription();
-                            annotationDescription.setName(annotation.annotationType().getName());
-                            annotationDescription.setDescription(annotation.toString());
-                    annotationDescriptions.add(annotationDescription);
-                }
-                description.setAnnotations(annotationDescriptions);
+            if (bean.getName().contains("$$")) {
+                description.setDescendantName(name);
+                bean = Class.forName(bean.getName().split("\\$\\$")[0]);
             }
-            catch (ClassNotFoundException ex) {
-
-            }
+            description.setClassName(bean.getName());
+            description.setAnnotations(annotationDescriptionsFor(bean));
             list.add(description);
         }
         return list;
@@ -82,6 +86,8 @@ public class HomeController {
     @Data
     static class ClassDescription {
         private String name;
+        private String className;
+        private String descendantName;
         private ArrayList<AnnotationDescription> annotations;
     }
 
